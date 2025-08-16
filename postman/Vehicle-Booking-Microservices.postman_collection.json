@@ -1,0 +1,838 @@
+{
+  "info": {
+    "name": "Vehicle Booking Microservices - Context Path Fixed",
+    "description": "Complete API collection for Spring Boot microservices with correct context paths",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8080",
+      "type": "string"
+    },
+    {
+      "key": "user_service_direct_url",
+      "value": "http://localhost:8081/user-service",
+      "type": "string"
+    },
+    {
+      "key": "vehicle_service_direct_url",
+      "value": "http://localhost:8082/vehicle-service",
+      "type": "string"
+    },
+    {
+      "key": "eureka_url",
+      "value": "http://localhost:8761",
+      "type": "string"
+    },
+    {
+      "key": "auth_token",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "🔍 System Health & Debug",
+      "item": [
+        {
+          "name": "Eureka Dashboard",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{eureka_url}}",
+              "host": ["{{eureka_url}}"]
+            }
+          }
+        },
+        {
+          "name": "API Gateway Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/actuator/health",
+              "host": ["{{base_url}}"],
+              "path": ["actuator", "health"]
+            }
+          }
+        },
+        {
+          "name": "Gateway Routes (Debug)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/actuator/gateway/routes",
+              "host": ["{{base_url}}"],
+              "path": ["actuator", "gateway", "routes"]
+            }
+          }
+        },
+        {
+          "name": "User Service Health (Direct)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{user_service_direct_url}}/actuator/health",
+              "host": ["{{user_service_direct_url}}"],
+              "path": ["actuator", "health"]
+            }
+          }
+        },
+        {
+          "name": "Vehicle Service Health (Direct)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{vehicle_service_direct_url}}/actuator/health",
+              "host": ["{{vehicle_service_direct_url}}"],
+              "path": ["actuator", "health"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🔐 Authentication",
+      "item": [
+        {
+          "name": "Admin Login (Gateway) ⭐",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    pm.collectionVariables.set('auth_token', response.token);",
+                  "    console.log('✅ Gateway Login Success - Token saved');",
+                  "    console.log('Token:', response.token.substring(0, 20) + '...');",
+                  "} else {",
+                  "    console.log('❌ Gateway Login Failed:', pm.response.text());",
+                  "    console.log('💡 Try the Direct login instead');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"admin\",\n  \"password\": \"admin123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "Admin Login (Direct) 🔄",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    pm.collectionVariables.set('auth_token', response.token);",
+                  "    console.log('✅ Direct Login Success - Token saved');",
+                  "    console.log('Token:', response.token.substring(0, 20) + '...');",
+                  "} else {",
+                  "    console.log('❌ Direct Login Failed:', pm.response.text());",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"admin\",\n  \"password\": \"admin123\"\n}"
+            },
+            "url": {
+              "raw": "{{user_service_direct_url}}/api/auth/login",
+              "host": ["{{user_service_direct_url}}"],
+              "path": ["api", "auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "Validate Token (Gateway)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/auth/validate",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "validate"]
+            }
+          }
+        },
+        {
+          "name": "Validate Token (Direct)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{user_service_direct_url}}/api/auth/validate",
+              "host": ["{{user_service_direct_url}}"],
+              "path": ["api", "auth", "validate"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "👥 User Management",
+      "item": [
+        {
+          "name": "Register Customer (Gateway) ⭐",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"customer1\",\n  \"password\": \"password123\",\n  \"role\": \"CUSTOMER\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/users/register",
+              "host": ["{{base_url}}"],
+              "path": ["api", "users", "register"]
+            }
+          }
+        },
+        {
+          "name": "Register Customer (Direct) 🔄",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"customer1\",\n  \"password\": \"password123\",\n  \"role\": \"CUSTOMER\"\n}"
+            },
+            "url": {
+              "raw": "{{user_service_direct_url}}/api/users/register",
+              "host": ["{{user_service_direct_url}}"],
+              "path": ["api", "users", "register"]
+            }
+          }
+        },
+        {
+          "name": "Register Branch Admin (Gateway) ⭐",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"branchadmin1\",\n  \"password\": \"password123\",\n  \"role\": \"BRANCH_ADMIN\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/users/register",
+              "host": ["{{base_url}}"],
+              "path": ["api", "users", "register"]
+            }
+          }
+        },
+        {
+          "name": "Get All Users (Gateway) ⭐",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/users",
+              "host": ["{{base_url}}"],
+              "path": ["api", "users"]
+            }
+          }
+        },
+        {
+          "name": "Get All Users (Direct) 🔄",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{user_service_direct_url}}/api/users",
+              "host": ["{{user_service_direct_url}}"],
+              "path": ["api", "users"]
+            }
+          }
+        },
+        {
+          "name": "Get Pending Users (Gateway) ⭐",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/users/pending",
+              "host": ["{{base_url}}"],
+              "path": ["api", "users", "pending"]
+            }
+          }
+        },
+        {
+          "name": "Get Pending Users (Direct) 🔄",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{user_service_direct_url}}/api/users/pending",
+              "host": ["{{user_service_direct_url}}"],
+              "path": ["api", "users", "pending"]
+            }
+          }
+        },
+        {
+          "name": "Approve User (Gateway) ⭐",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/users/2/approve",
+              "host": ["{{base_url}}"],
+              "path": ["api", "users", "2", "approve"]
+            }
+          }
+        },
+        {
+          "name": "Approve User (Direct) 🔄",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{user_service_direct_url}}/api/users/2/approve",
+              "host": ["{{user_service_direct_url}}"],
+              "path": ["api", "users", "2", "approve"]
+            }
+          }
+        },
+        {
+          "name": "Get User Stats (Gateway) ⭐",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/users/stats",
+              "host": ["{{base_url}}"],
+              "path": ["api", "users", "stats"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🚗 Vehicle Management",
+      "item": [
+        {
+          "name": "Get All Vehicles (Gateway) ⭐",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/vehicles",
+              "host": ["{{base_url}}"],
+              "path": ["api", "vehicles"]
+            }
+          }
+        },
+        {
+          "name": "Get All Vehicles (Direct) 🔄",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{vehicle_service_direct_url}}/api/vehicles",
+              "host": ["{{vehicle_service_direct_url}}"],
+              "path": ["api", "vehicles"]
+            }
+          }
+        },
+        {
+          "name": "Add Vehicle (Gateway) ⭐",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Toyota Camry 2024\",\n  \"type\": \"Sedan\",\n  \"brand\": \"Toyota\",\n  \"model\": \"Camry\",\n  \"year\": 2024,\n  \"pricePerDay\": 85.00,\n  \"features\": [\"AC\", \"GPS\", \"Bluetooth\", \"Backup Camera\"],\n  \"fuelType\": \"Petrol\",\n  \"transmission\": \"Automatic\",\n  \"seatingCapacity\": 5,\n  \"imageUrl\": \"https://images.pexels.com/photos/3802510/pexels-photo-3802510.jpeg\",\n  \"totalStock\": 10\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/vehicles",
+              "host": ["{{base_url}}"],
+              "path": ["api", "vehicles"]
+            }
+          }
+        },
+        {
+          "name": "Add Vehicle (Direct) 🔄",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Honda CR-V 2024\",\n  \"type\": \"SUV\",\n  \"brand\": \"Honda\",\n  \"model\": \"CR-V\",\n  \"year\": 2024,\n  \"pricePerDay\": 120.00,\n  \"features\": [\"AC\", \"GPS\", \"AWD\", \"Sunroof\"],\n  \"fuelType\": \"Petrol\",\n  \"transmission\": \"Automatic\",\n  \"seatingCapacity\": 7,\n  \"imageUrl\": \"https://images.pexels.com/photos/1319551/pexels-photo-1319551.jpeg\",\n  \"totalStock\": 8\n}"
+            },
+            "url": {
+              "raw": "{{vehicle_service_direct_url}}/api/vehicles",
+              "host": ["{{vehicle_service_direct_url}}"],
+              "path": ["api", "vehicles"]
+            }
+          }
+        },
+        {
+          "name": "Search Vehicles (Gateway) ⭐",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/vehicles/search?type=Sedan&minPrice=50&maxPrice=150",
+              "host": ["{{base_url}}"],
+              "path": ["api", "vehicles", "search"],
+              "query": [
+                {
+                  "key": "type",
+                  "value": "Sedan"
+                },
+                {
+                  "key": "minPrice",
+                  "value": "50"
+                },
+                {
+                  "key": "maxPrice",
+                  "value": "150"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Available Vehicles (Gateway) ⭐",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/vehicles/available",
+              "host": ["{{base_url}}"],
+              "path": ["api", "vehicles", "available"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "📋 Booking Management",
+      "item": [
+        {
+          "name": "Create Booking (Gateway) ⭐",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customerId\": 2,\n  \"customerName\": \"John Doe\",\n  \"vehicleId\": 1,\n  \"vehicleName\": \"Toyota Camry\",\n  \"branchId\": 3,\n  \"branchName\": \"Downtown Branch\",\n  \"startDate\": \"2024-02-01\",\n  \"endDate\": \"2024-02-05\",\n  \"totalAmount\": 340.00\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/bookings",
+              "host": ["{{base_url}}"],
+              "path": ["api", "bookings"]
+            }
+          }
+        },
+        {
+          "name": "Create Booking (Direct) 🔄",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customerId\": 2,\n  \"customerName\": \"Jane Smith\",\n  \"vehicleId\": 1,\n  \"vehicleName\": \"Honda CR-V\",\n  \"branchId\": 3,\n  \"branchName\": \"Downtown Branch\",\n  \"startDate\": \"2024-02-10\",\n  \"endDate\": \"2024-02-15\",\n  \"totalAmount\": 600.00\n}"
+            },
+            "url": {
+              "raw": "{{vehicle_service_direct_url}}/api/bookings",
+              "host": ["{{vehicle_service_direct_url}}"],
+              "path": ["api", "bookings"]
+            }
+          }
+        },
+        {
+          "name": "Get All Bookings (Gateway) ⭐",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/bookings",
+              "host": ["{{base_url}}"],
+              "path": ["api", "bookings"]
+            }
+          }
+        },
+        {
+          "name": "Get All Bookings (Direct) 🔄",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{vehicle_service_direct_url}}/api/bookings",
+              "host": ["{{vehicle_service_direct_url}}"],
+              "path": ["api", "bookings"]
+            }
+          }
+        },
+        {
+          "name": "Get Customer Bookings (Gateway) ⭐",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/bookings/customer/2",
+              "host": ["{{base_url}}"],
+              "path": ["api", "bookings", "customer", "2"]
+            }
+          }
+        },
+        {
+          "name": "Approve Booking (Gateway) ⭐",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"branchAdminNotes\": \"Booking approved. Vehicle ready for pickup.\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/bookings/1/approve",
+              "host": ["{{base_url}}"],
+              "path": ["api", "bookings", "1", "approve"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🚛 Vehicle Requests",
+      "item": [
+        {
+          "name": "Create Vehicle Request (Gateway) ⭐",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"branchId\": 3,\n  \"branchName\": \"Downtown Branch\",\n  \"vehicleId\": 1,\n  \"vehicleName\": \"Toyota Camry\",\n  \"requestedQuantity\": 5\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/requests",
+              "host": ["{{base_url}}"],
+              "path": ["api", "requests"]
+            }
+          }
+        },
+        {
+          "name": "Create Vehicle Request (Direct) 🔄",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"branchId\": 4,\n  \"branchName\": \"Uptown Branch\",\n  \"vehicleId\": 2,\n  \"vehicleName\": \"Honda CR-V\",\n  \"requestedQuantity\": 3\n}"
+            },
+            "url": {
+              "raw": "{{vehicle_service_direct_url}}/api/requests",
+              "host": ["{{vehicle_service_direct_url}}"],
+              "path": ["api", "requests"]
+            }
+          }
+        },
+        {
+          "name": "Get All Vehicle Requests (Gateway) ⭐",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/requests",
+              "host": ["{{base_url}}"],
+              "path": ["api", "requests"]
+            }
+          }
+        },
+        {
+          "name": "Get All Vehicle Requests (Direct) 🔄",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{vehicle_service_direct_url}}/api/requests",
+              "host": ["{{vehicle_service_direct_url}}"],
+              "path": ["api", "requests"]
+            }
+          }
+        },
+        {
+          "name": "Approve Vehicle Request (Gateway) ⭐",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"approvedQuantity\": 5,\n  \"adminNotes\": \"Request approved. Vehicles will be transferred.\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/requests/1/approve",
+              "host": ["{{base_url}}"],
+              "path": ["api", "requests", "1", "approve"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🐛 Troubleshooting",
+      "item": [
+        {
+          "name": "Test Gateway Root",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/",
+              "host": ["{{base_url}}"],
+              "path": [""]
+            }
+          }
+        },
+        {
+          "name": "Test User Service Root (Direct)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{user_service_direct_url}}/",
+              "host": ["{{user_service_direct_url}}"],
+              "path": [""]
+            }
+          }
+        },
+        {
+          "name": "Test Vehicle Service Root (Direct)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{vehicle_service_direct_url}}/",
+              "host": ["{{vehicle_service_direct_url}}"],
+              "path": [""]
+            }
+          }
+        },
+        {
+          "name": "Gateway Info",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/actuator/info",
+              "host": ["{{base_url}}"],
+              "path": ["actuator", "info"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

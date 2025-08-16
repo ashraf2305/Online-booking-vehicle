@@ -1,0 +1,129 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+
+  config:
+    import: "optional:configserver:"
+  cloud:
+    config:
+      enabled: false
+    import-check:
+      enabled: false
+
+    gateway:
+      discovery:
+        locator:
+          enabled: true
+          lower-case-service-id: true
+
+      routes:
+        # User Service routes - handle context path properly
+        - id: user-service-auth
+          uri: lb://user-service
+          predicates:
+            - Path=/api/auth/**
+          filters:
+            - RewritePath=/api/auth/(?<segment>.*), /user-service/api/auth/$\{segment}
+
+        - id: user-service-users-root
+          uri: lb://user-service
+          predicates:
+            - Path=/api/users
+          filters:
+            - RewritePath=/api/users, /user-service/api/users
+
+        - id: user-service-users-nested
+          uri: lb://user-service
+          predicates:
+            - Path=/api/users/**
+          filters:
+            - RewritePath=/api/users/(?<segment>.*), /user-service/api/users/$\{segment}
+
+        # Vehicle Service routes - handle context path properly
+        - id: vehicle-service-vehicles-root
+          uri: lb://vehicle-service
+          predicates:
+            - Path=/api/vehicles
+          filters:
+            - RewritePath=/api/vehicles, /vehicle-service/api/vehicles
+
+        - id: vehicle-service-vehicles-nested
+          uri: lb://vehicle-service
+          predicates:
+            - Path=/api/vehicles/**
+          filters:
+            - RewritePath=/api/vehicles/(?<segment>.*), /vehicle-service/api/vehicles/$\{segment}
+
+        - id: vehicle-service-bookings-root
+          uri: lb://vehicle-service
+          predicates:
+            - Path=/api/bookings
+          filters:
+            - RewritePath=/api/bookings, /vehicle-service/api/bookings
+
+        - id: vehicle-service-bookings-nested
+          uri: lb://vehicle-service
+          predicates:
+            - Path=/api/bookings/**
+          filters:
+            - RewritePath=/api/bookings/(?<segment>.*), /vehicle-service/api/bookings/$\{segment}
+
+        - id: vehicle-service-requests
+          uri: lb://vehicle-service
+          predicates:
+            - Path=/api/requests/**
+          filters:
+            - RewritePath=/api/requests/(?<segment>.*), /vehicle-service/api/requests/$\{segment}
+
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOrigins: "*"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+            allowedHeaders: "*"
+            allow-credentials: false
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+    fetch-registry: true
+    register-with-eureka: true
+    registryFetchIntervalSeconds: 10
+
+  instance:
+    prefer-ip-address: true
+    lease-renewal-interval-in-seconds: 10
+    lease-expiration-duration-in-seconds: 30
+    status-page-url-path: /actuator/health
+    health-check-url-path: /actuator/health
+    metadata-map:
+      startup: ${random.int}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,gateway
+  endpoint:
+    health:
+      show-details: always
+  health:
+    livenessState:
+      enabled: true
+    readinessState:
+      enabled: true
+
+logging:
+  level:
+    root: INFO
+    org.springframework.cloud.gateway: DEBUG
+    org.springframework.cloud.netflix.eureka: DEBUG

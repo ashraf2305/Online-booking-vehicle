@@ -1,0 +1,95 @@
+version: '3.8'
+
+services:
+  # MySQL Database
+  mysql:
+    image: mysql:8.0
+    container_name: vehicle-booking-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: vehicle_booking
+      MYSQL_USER: vehicleuser
+      MYSQL_PASSWORD: vehiclepass
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./init-scripts:/docker-entrypoint-initdb.d
+    networks:
+      - vehicle-booking-network
+
+  # Eureka Server
+  eureka-server:
+    build: ./eureka-server
+    container_name: eureka-server
+    ports:
+      - "8761:8761"
+    networks:
+      - vehicle-booking-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8761/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # User Service
+  user-service:
+    build: ./user-service
+    container_name: user-service
+    ports:
+      - "8081:8081"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/vehicle_booking_users
+      SPRING_DATASOURCE_USERNAME: vehicleuser
+      SPRING_DATASOURCE_PASSWORD: vehiclepass
+    depends_on:
+      - mysql
+      - eureka-server
+    networks:
+      - vehicle-booking-network
+    restart: unless-stopped
+
+  # Vehicle Service
+  vehicle-service:
+    build: ./vehicle-service
+    container_name: vehicle-service
+    ports:
+      - "8082:8082"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/vehicle_booking_vehicles
+      SPRING_DATASOURCE_USERNAME: vehicleuser
+      SPRING_DATASOURCE_PASSWORD: vehiclepass
+    depends_on:
+      - mysql
+      - eureka-server
+    networks:
+      - vehicle-booking-network
+    restart: unless-stopped
+
+  # API Gateway
+  api-gateway:
+    build: ./api-gateway
+    container_name: api-gateway
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: http://eureka-server:8761/eureka/
+    depends_on:
+      - eureka-server
+      - user-service
+      - vehicle-service
+    networks:
+      - vehicle-booking-network
+    restart: unless-stopped
+
+volumes:
+  mysql_data:
+
+networks:
+  vehicle-booking-network:
+    driver: bridge
